@@ -12,6 +12,7 @@ let gameStarted = false; // 게임 시작 여부
 const BG_MOVING_SPEED = 3; // 배경 이동 속도
 let bgX = 0; // 배경 X 좌표
 let scoreText = document.getElementById("score"); // 점수 표시 요소
+let startTime = 0; // 시작 시간
 let score = 0; // 현재 점수
 
 /** 게임 변수 */
@@ -100,31 +101,75 @@ class Obstacle {
 /** end of 2-1 장애물 설정 */
 
 /** 보스 설정 */
-const BOSS_WIDTH = 400;     // 보스 너비
-const BOSS_HEIGHT = 400;    // 보스 높이
-const BOSS_X = 500;         // 보스 X 위치
-const BOSS_Y = 60;         // 보스 Y 위치
+const BOSS_WIDTH = 150;     // 보스 너비
+const BOSS_HEIGHT = 150;    // 보스 높이
+const BOSS_X = 600;         // 보스 X 위치
+const BOSS_Y = 100;         // 보스 Y 위치
 const BOSS_MAXHP = 100;     // 보스 최대 체력
+const BOSS_SPEED = 1;     // 보스 최대 체력
 
-/** 보스 클래스 정의 */
+/** 보스 정의 */
 const boss = {
     x: BOSS_X,
     y: BOSS_Y,
     width: BOSS_WIDTH,
     height: BOSS_HEIGHT,
     hp: BOSS_MAXHP,
+    moveDir: 1,
+    moveSpeed: BOSS_SPEED,
     draw() {
         ctx.drawImage(images.boss, this.x, this.y, this.width, this.height); // 보스 이미지 그리기
     },
     takeDamage(damage) {
         this.hp -= damage;
+        HPBar.health -= damage;
+        //HPBar.show();
         if (this.hp <= 0) {
             gameClear = true;
-            
         }
     },
+    move() {
+
+        this.y += this.moveDir * this.moveSpeed;
+        HPBar.y += this.moveDir * this.moveSpeed;
+
+        if (this.y - 50 <= 0) {
+            this.moveDir = 1;
+        }
+
+        if (this.y + 50 >= 400) {
+            this.moveDir = -1;
+        }
+    }
 }
 /** end of 보스 설정 */
+
+/** 체력 바 설정 */
+const HPBAR_WIDTH = 100
+const HPBAR_HEIGHT = 10;
+const HPBAR_X = (BOSS_X + BOSS_WIDTH / 2) - HPBAR_WIDTH / 2;
+const HPBAR_Y = BOSS_Y - 20;
+const HPBAR_COLOR = "red";
+
+/** 체력 바 정의 */
+const HPBar = {
+    y: HPBAR_Y,
+    maxHealth: BOSS_MAXHP,
+    health: BOSS_MAXHP,
+    color: HPBAR_COLOR,
+    moveDir: 1,
+    moveSpeed: BOSS_SPEED,
+    show() {
+        ctx.fillStyle = HPBAR_COLOR;
+        ctx.fillRect(HPBAR_X, this.y, (boss.hp / BOSS_MAXHP) * HPBAR_WIDTH, HPBAR_HEIGHT);
+        ctx.strokeRect(HPBAR_X, this.y, HPBAR_WIDTH, HPBAR_HEIGHT)
+    },
+    move() {
+        boss.y - 20;
+    }
+}
+
+
 
 /** 3-1 배경 화면 그리기 */
 function backgroundImg(bgX) {
@@ -191,7 +236,7 @@ Promise.all([bgImageLoaded, startImageLoaded]).then(drawStartScreen);
 
 /** 게임 애니메이션 함수 */
 function animate() {
-    /** */
+    /** 게임 클리어 */
     if (gameClear) {
         timer = 0;
         jump = false;
@@ -224,6 +269,7 @@ function animate() {
 
     /**-- 보스 --*/
     boss.draw();
+    boss.move();
 
     /**-- 장애물 --*/
     /** 2-2 장애물 움직이기 */
@@ -241,11 +287,6 @@ function animate() {
         // 화면 밖으로 나간 장애물 제거 및 점수 증가
         if (obstacle.x < -OBSTACLE_WIDTH) {
             obstacleArray.shift(); // 장애물 제거
-            score += 10; // 점수 증가
-            scoreText.innerHTML = "현재점수: " + score;
-            sounds.score.pause(); // 현재 재생 중인 점수 소리 중지
-            sounds.score.currentTime = 0; // 소리 재생 위치를 시작으로 초기화
-            sounds.score.play(); // 점수 획득 소리 재생
         }
 
         // 충돌 검사
@@ -277,10 +318,17 @@ function animate() {
         if (collision(boss, bullet)) {
             boss.takeDamage(bullet.damage);
             bulletArray.splice(index, 1); // 총알 제거
+
+            //score += 10; // 점수 증가
+            //scoreText.innerHTML = "현재점수: " + boss.hp;
+            sounds.score.pause(); // 현재 재생 중인 점수 소리 중지
+            sounds.score.currentTime = 0; // 소리 재생 위치를 시작으로 초기화
+            sounds.score.play(); // 점수 획득 소리 재생
+
         }
+
     });
     /** end of 총알 */
-
 
     /**-- 르탄이 --*/
     // 1-2 르탄이 그리기
@@ -297,6 +345,12 @@ function animate() {
         }
     }
     /** end of 르탄이 */
+
+    /** 체력 바 */
+    HPBar.show();
+    HPBar.move();
+
+    scoreText.innerHTML = "소요시간: " + Math.floor((Date.now() - startTime) / 500);
 }
 /** end of 게임 애니메이션 */
 
@@ -344,10 +398,11 @@ canvas.addEventListener("click", function (e) {
         y <= canvas.height
     ) {
         gameStarted = true;
+        startTime = Date.now();
         animate();
         return;
     }
-    
+
     if ( // 게임 재시작 버튼 클릭 확인
         (gameOver || gameClear) &&
         x >= canvas.width / 2 - 50 &&
@@ -358,7 +413,7 @@ canvas.addEventListener("click", function (e) {
         restartGame();
         return;
     }
-    
+
     if (gameStarted && !gameOver && !gameClear) {
         const bullet = new Bullet(x, y);
         bulletArray.push(bullet);
@@ -379,6 +434,8 @@ function restartGame() {
     rtan.x = RTAN_X;
     rtan.y = RTAN_Y;
     boss.hp = BOSS_MAXHP;
+    HPBar.health = HPBar.maxHealth;
+    startTime = Date.now();
     animate();
 }
 /** end of 3-3 마우스 클릭 이벤트 처리 (게임 시작 및 재시작) */
@@ -392,7 +449,7 @@ canvas.addEventListener("mousemove", function (e) {
 
     // 게임오버 재시작 버튼 위에 있을 때
     if (
-        (gameOver || gameClear)&&
+        (gameOver || gameClear) &&
         x >= canvas.width / 2 - 50 &&
         x <= canvas.width / 2 + 50 &&
         y >= canvas.height / 2 + 50 &&
