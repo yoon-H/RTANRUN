@@ -102,10 +102,14 @@ const boss = {
     hp: BOSS_MAXHP,
     moveDir: 1,
     moveSpeed: BOSS_SPEED,
+    initSpeed: BOSS_SPEED,
+    isUpgraded: false,
     init() {
         this.x = this.initX;
         this.y = this.initY;
         this.hp = this.maxHp;
+        this.moveSpeed = this.initSpeed;
+        this.isUpgraded = false;
     },
     draw(ctx) {
         ctx.drawImage(images.boss, this.x, this.y, this.width, this.height); // 보스 이미지 그리기
@@ -113,7 +117,13 @@ const boss = {
     takeDamage(damage) {
         this.hp -= damage;
         HPBar.health -= damage;
-        //HPBar.show();
+
+        if (!this.isUpgraded && this.hp <= this.maxHp / 2) {
+            this.moveSpeed += 1;
+            obstacleFrequency += addFrequency;
+            this.isUpgraded = true;
+        }
+
         if (this.hp <= 0) {
             gameClear = true;
         }

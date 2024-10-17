@@ -104,7 +104,7 @@ function animate() {
 
     /**-- 장애물 --*/
     /** 2-2 장애물 움직이기 */
-    if (timer % OBSTACLE_FREQUENCY === 0) {
+    if (timer % obstacleFrequency === 0) {
         const obstacle = new Obstacle();
         obstacleArray.push(obstacle);
     }
@@ -265,6 +265,7 @@ function restartGame() {
     rtan.init();
     boss.init();
     HPBar.init();
+    obstacleFrequency = OBSTACLE_FREQUENCY;
     startTime = Date.now();
     animate();
 }

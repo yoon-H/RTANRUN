@@ -21,3 +21,5 @@ let gameClear = false; // 게임 클리어 여부
 let jump = false; // 점프 여부
 let jumpSpeed = 3; // 점프 속도
 const OBSTACLE_FREQUENCY = 120; // 장애물 생성 빈도
+const addFrequency = 20;
+let obstacleFrequency = OBSTACLE_FREQUENCY;
