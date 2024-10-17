@@ -65,15 +65,13 @@ class Bullet {
 /** 2-1 장애물 설정 */
 const OBSTACLE_WIDTH = 50; // 장애물 너비
 const OBSTACLE_HEIGHT = 50; // 장애물 높이
-
 const OBSTACLE_SPEED = 4; // 장애물 이동 속도
 
 /** 장애물 클래스 정의 */
 class Obstacle {
     constructor() {
-        this.x = canvas.width;
-        this.y =
-            Math.floor(Math.random() * (canvas.height - OBSTACLE_HEIGHT - 30)) + 30; // 장애물이 canvas의 상단과 하단에서 30px 이내에 생성되지 않도록 조정
+        this.x = boss.x;
+        this.y = boss.y; // 장애물이 canvas의 상단과 하단에서 30px 이내에 생성되지 않도록 조정
         this.width = OBSTACLE_WIDTH;
         this.height = OBSTACLE_HEIGHT;
         this.speed = OBSTACLE_SPEED;
